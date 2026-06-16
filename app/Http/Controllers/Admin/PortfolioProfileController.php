@@ -7,6 +7,7 @@ use App\Models\AboutCard;
 use App\Models\Profile;
 use App\Models\Statistic;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -91,10 +92,10 @@ class PortfolioProfileController extends Controller
 
             $profile->avatar_path = Storage::disk('s3')->url($path);
         }
-        dd(
-            $request->hasFile('avatar'),
-            $request->file('avatar')
-        );
+        Log::info('Avatar Debug', [
+    'hasFile' => $request->hasFile('avatar'),
+    'avatar' => $request->file('avatar'),
+]);
         $profile->save();
 
         return redirect()->back()->with('success', 'Portfolio Profile updated successfully.');
