@@ -80,6 +80,7 @@ class PortfolioProfileController extends Controller
                 'profile',
                 's3'
             );
+            dd($path);
 
             $profile->avatar_path = Storage::disk('s3')->url($path);
         }
