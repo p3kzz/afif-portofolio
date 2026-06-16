@@ -5,6 +5,7 @@ use App\Http\Controllers\PortfolioController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 Route::get('/', [PortfolioController::class, 'index'])->name('portfolio');
@@ -18,7 +19,24 @@ Route::post('/comments', [PortfolioController::class, 'storeComment'])->name('po
 //         'phpVersion' => PHP_VERSION,
 //     ]);
 // });
+Route::get('/s3-test', function () {
 
+    try {
+
+        Storage::disk('s3')->put(
+            'test.txt',
+            'hello world'
+        );
+
+        return 'UPLOAD SUCCESS';
+
+    } catch (\Throwable $e) {
+
+        return $e->getMessage();
+
+    }
+
+});
 Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->name('dashboard');
