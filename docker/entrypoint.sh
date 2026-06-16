@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+echo "Running migrations..."
+
+php artisan migrate --force
+
 echo "Caching configurations, routes, and views..."
 
 php artisan config:cache
