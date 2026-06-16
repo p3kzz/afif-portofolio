@@ -80,9 +80,9 @@ class PortfolioProfileController extends Controller
 
                 $file = $request->file('avatar');
 
-                $path = $file->store(
+                $path = Storage::disk('s3')->putFile(
                     'profile',
-                    's3'
+                    $file
                 );
 
                 dd([
