@@ -14,6 +14,7 @@ use App\Models\Testimonial;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -69,9 +70,43 @@ class PortfolioController extends Controller
     {
         $profile = Profile::first();
         if ($profile && $profile->cv_file_path) {
+
+            // Jika path adalah URL S3/Supabase (dimulai dengan http/https)
+            if (filter_var($profile->cv_file_path, FILTER_VALIDATE_URL)) {
+                $urlPath = parse_url($profile->cv_file_path, PHP_URL_PATH);
+                // Hapus prefix bucket (seperti /storage/v1/object/public/bucket/ atau /storage/v1/s3/bucket/)
+                $s3Path = preg_replace('#^/storage/v1/(object/public|s3)/[^/]+/#', '', $urlPath);
+
+                try {
+                    if (Storage::disk('s3')->exists($s3Path)) {
+                        $ext = pathinfo($s3Path, PATHINFO_EXTENSION);
+                        $downloadName = ($profile->name ? str_replace(' ', '_', $profile->name) : 'CV') . '_Resume.' . $ext;
+
+                        return response()->streamDownload(function () use ($s3Path) {
+                            $stream = Storage::disk('s3')->readStream($s3Path);
+                            if ($stream) {
+                                fpassthru($stream);
+                                if (is_resource($stream)) {
+                                    fclose($stream);
+                                }
+                            }
+                        }, $downloadName, [
+                            'Content-Type' => 'application/pdf',
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    // Jika gagal stream via S3 client, alihkan langsung ke URL publiknya di browser
+                    return redirect()->away($profile->cv_file_path);
+                }
+
+                // Jika file tidak ditemukan di S3, alihkan langsung ke URL publiknya
+                return redirect()->away($profile->cv_file_path);
+            }
+
+            // Fallback untuk file lokal
             $relativePath = str_replace('/storage/', 'storage/', $profile->cv_file_path);
             $path = public_path($relativePath);
-            
+
             if (file_exists($path)) {
                 $ext = pathinfo($path, PATHINFO_EXTENSION);
                 $downloadName = ($profile->name ? str_replace(' ', '_', $profile->name) : 'CV') . '_Resume.' . $ext;
