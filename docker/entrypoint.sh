@@ -5,6 +5,9 @@ echo "Running migrations..."
 
 php artisan migrate --force
 
+echo "Running seeders..."
+php artisan db:seed --force
+
 echo "Caching configurations, routes, and views..."
 
 php artisan config:cache
