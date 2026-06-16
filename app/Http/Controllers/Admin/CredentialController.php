@@ -73,9 +73,14 @@ class CredentialController extends Controller
         $certification->credential_url = $validated['credential_url'];
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('certifications', 'public');
-            $certification->image_path = '/storage/' . $path;
-        }
+    $path = $request->file('image')->store(
+        'certifications',
+        's3'
+    );
+
+    $certification->image_path =
+        Storage::disk('s3')->url($path);
+}
 
         $certification->save();
 
@@ -98,13 +103,34 @@ class CredentialController extends Controller
         $certification->credential_url = $validated['credential_url'];
 
         if ($request->hasFile('image')) {
-            if ($certification->image_path) {
-                $oldPath = str_replace('/storage/', '', $certification->image_path);
-                Storage::disk('public')->delete($oldPath);
-            }
-            $path = $request->file('image')->store('certifications', 'public');
-            $certification->image_path = '/storage/' . $path;
+
+    if ($certification->image_path) {
+
+        $oldPath = parse_url(
+            $certification->image_path,
+            PHP_URL_PATH
+        );
+
+        if ($oldPath) {
+
+            $oldPath = preg_replace(
+                '#^/storage/v1/s3/public/portfolio/#',
+                '',
+                $oldPath
+            );
+
+            Storage::disk('s3')->delete($oldPath);
         }
+    }
+
+    $path = $request->file('image')->store(
+        'certifications',
+        's3'
+    );
+
+    $certification->image_path =
+        Storage::disk('s3')->url($path);
+}
 
         $certification->save();
 
@@ -114,9 +140,23 @@ class CredentialController extends Controller
     public function destroyCertification(Certification $certification)
     {
         if ($certification->image_path) {
-            $oldPath = str_replace('/storage/', '', $certification->image_path);
-            Storage::disk('public')->delete($oldPath);
-        }
+
+    $oldPath = parse_url(
+        $certification->image_path,
+        PHP_URL_PATH
+    );
+
+    if ($oldPath) {
+
+        $oldPath = preg_replace(
+            '#^/storage/v1/s3/public/portfolio/#',
+            '',
+            $oldPath
+        );
+
+        Storage::disk('s3')->delete($oldPath);
+    }
+}
         $certification->delete();
 
         return redirect()->back()->with('success', 'Certification deleted successfully.');

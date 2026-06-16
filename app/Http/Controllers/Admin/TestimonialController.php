@@ -33,8 +33,14 @@ class TestimonialController extends Controller
         $testimonial->author_role = $validated['author_role'];
 
         if ($request->hasFile('avatar')) {
-            $path = $request->file('avatar')->store('testimonials', 'public');
-            $testimonial->avatar_path = '/storage/' . $path;
+
+            $path = $request->file('avatar')->store(
+                'testimonials',
+                's3'
+            );
+
+            $testimonial->avatar_path =
+                Storage::disk('s3')->url($path);
         }
 
         $testimonial->save();
@@ -56,12 +62,33 @@ class TestimonialController extends Controller
         $testimonial->author_role = $validated['author_role'];
 
         if ($request->hasFile('avatar')) {
+
             if ($testimonial->avatar_path) {
-                $oldPath = str_replace('/storage/', '', $testimonial->avatar_path);
-                Storage::disk('public')->delete($oldPath);
+
+                $oldPath = parse_url(
+                    $testimonial->avatar_path,
+                    PHP_URL_PATH
+                );
+
+                if ($oldPath) {
+
+                    $oldPath = preg_replace(
+                        '#^/storage/v1/s3/public/portfolio/#',
+                        '',
+                        $oldPath
+                    );
+
+                    Storage::disk('s3')->delete($oldPath);
+                }
             }
-            $path = $request->file('avatar')->store('testimonials', 'public');
-            $testimonial->avatar_path = '/storage/' . $path;
+
+            $path = $request->file('avatar')->store(
+                'testimonials',
+                's3'
+            );
+
+            $testimonial->avatar_path =
+                Storage::disk('s3')->url($path);
         }
 
         $testimonial->save();
@@ -72,8 +99,22 @@ class TestimonialController extends Controller
     public function destroy(Testimonial $testimonial)
     {
         if ($testimonial->avatar_path) {
-            $oldPath = str_replace('/storage/', '', $testimonial->avatar_path);
-            Storage::disk('public')->delete($oldPath);
+
+            $oldPath = parse_url(
+                $testimonial->avatar_path,
+                PHP_URL_PATH
+            );
+
+            if ($oldPath) {
+
+                $oldPath = preg_replace(
+                    '#^/storage/v1/s3/public/portfolio/#',
+                    '',
+                    $oldPath
+                );
+
+                Storage::disk('s3')->delete($oldPath);
+            }
         }
         $testimonial->delete();
 

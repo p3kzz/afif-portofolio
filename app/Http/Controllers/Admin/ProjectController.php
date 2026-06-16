@@ -42,8 +42,9 @@ class ProjectController extends Controller
         $project->fill($validated);
 
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('projects', 'public');
-            $project->image_preview_path = '/storage/' . $path;
+            $path = $request->file('image')->store('projects', 's3');
+
+            $project->image_preview_path = Storage::disk('s3')->url($path);
         }
 
         $project->save();
@@ -74,12 +75,32 @@ class ProjectController extends Controller
         $project->fill($validated);
 
         if ($request->hasFile('image')) {
+
             if ($project->image_preview_path) {
-                $oldPath = str_replace('/storage/', '', $project->image_preview_path);
-                Storage::disk('public')->delete($oldPath);
+
+                $oldPath = parse_url(
+                    $project->image_preview_path,
+                    PHP_URL_PATH
+                );
+
+                if ($oldPath) {
+
+                    $oldPath = preg_replace(
+                        '#^/storage/v1/s3/public/portfolio/#',
+                        '',
+                        $oldPath
+                    );
+
+                    Storage::disk('s3')->delete($oldPath);
+                }
             }
-            $path = $request->file('image')->store('projects', 'public');
-            $project->image_preview_path = '/storage/' . $path;
+
+            $path = $request->file('image')->store(
+                'projects',
+                's3'
+            );
+
+            $project->image_preview_path = Storage::disk('s3')->url($path);
         }
 
         $project->save();
@@ -90,9 +111,23 @@ class ProjectController extends Controller
     public function destroy(Project $project)
     {
         if ($project->image_preview_path) {
-            $oldPath = str_replace('/storage/', '', $project->image_preview_path);
-            Storage::disk('public')->delete($oldPath);
-        }
+
+    $oldPath = parse_url(
+        $project->image_preview_path,
+        PHP_URL_PATH
+    );
+
+    if ($oldPath) {
+
+        $oldPath = preg_replace(
+            '#^/storage/v1/s3/public/portfolio/#',
+            '',
+            $oldPath
+        );
+
+        Storage::disk('s3')->delete($oldPath);
+    }
+}
         $project->delete();
 
         return redirect()->back()->with('success', 'Project deleted successfully.');

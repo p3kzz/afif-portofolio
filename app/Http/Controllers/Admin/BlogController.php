@@ -34,7 +34,7 @@ class BlogController extends Controller
         $blog->excerpt = $validated['excerpt'];
         $blog->content = $validated['content'];
         $blog->is_published = $validated['is_published'];
-        
+
         // Generate unique slug
         $slug = Str::slug($validated['title']);
         $originalSlug = $slug;
@@ -45,9 +45,15 @@ class BlogController extends Controller
         $blog->slug = $slug;
 
         if ($request->hasFile('cover')) {
-            $path = $request->file('cover')->store('blogs', 'public');
-            $blog->cover_image_path = '/storage/' . $path;
-        }
+
+    $path = $request->file('cover')->store(
+        'blogs',
+        's3'
+    );
+
+    $blog->cover_image_path =
+        Storage::disk('s3')->url($path);
+}
 
         $blog->save();
 
@@ -81,13 +87,34 @@ class BlogController extends Controller
         }
 
         if ($request->hasFile('cover')) {
-            if ($blog->cover_image_path) {
-                $oldPath = str_replace('/storage/', '', $blog->cover_image_path);
-                Storage::disk('public')->delete($oldPath);
-            }
-            $path = $request->file('cover')->store('blogs', 'public');
-            $blog->cover_image_path = '/storage/' . $path;
+
+    if ($blog->cover_image_path) {
+
+        $oldPath = parse_url(
+            $blog->cover_image_path,
+            PHP_URL_PATH
+        );
+
+        if ($oldPath) {
+
+            $oldPath = preg_replace(
+                '#^/storage/v1/s3/public/portfolio/#',
+                '',
+                $oldPath
+            );
+
+            Storage::disk('s3')->delete($oldPath);
         }
+    }
+
+    $path = $request->file('cover')->store(
+        'blogs',
+        's3'
+    );
+
+    $blog->cover_image_path =
+        Storage::disk('s3')->url($path);
+}
 
         $blog->save();
 
@@ -97,9 +124,23 @@ class BlogController extends Controller
     public function destroy(Blog $blog)
     {
         if ($blog->cover_image_path) {
-            $oldPath = str_replace('/storage/', '', $blog->cover_image_path);
-            Storage::disk('public')->delete($oldPath);
-        }
+
+    $oldPath = parse_url(
+        $blog->cover_image_path,
+        PHP_URL_PATH
+    );
+
+    if ($oldPath) {
+
+        $oldPath = preg_replace(
+            '#^/storage/v1/s3/public/portfolio/#',
+            '',
+            $oldPath
+        );
+
+        Storage::disk('s3')->delete($oldPath);
+    }
+}
         $blog->delete();
 
         return redirect()->back()->with('success', 'Blog deleted successfully.');

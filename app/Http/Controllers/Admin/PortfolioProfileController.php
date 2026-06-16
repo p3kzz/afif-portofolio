@@ -56,23 +56,59 @@ class PortfolioProfileController extends Controller
         $profile->instagram_url = $validated['instagram_url'] ?? null;
 
         if ($request->hasFile('cv_file')) {
+            // Hapus file lama
             if ($profile->cv_file_path) {
-                $oldPath = str_replace('/storage/', '', $profile->cv_file_path);
-                Storage::disk('public')->delete($oldPath);
+                $oldPath = parse_url($profile->cv_file_path, PHP_URL_PATH);
+
+                if ($oldPath) {
+                    $oldPath = preg_replace(
+                        '#^/storage/v1/s3/public/portfolio/#',
+                        '',
+                        $oldPath
+                    );
+
+                    Storage::disk('s3')->delete($oldPath);
+                }
             }
+
             $file = $request->file('cv_file');
-            $fileName = time() . '_' . str_replace(' ', '_', $file->getClientOriginalName());
-            $path = $file->storeAs('profile', $fileName, 'public');
-            $profile->cv_file_path = '/storage/' . $path;
+            $fileName = time() . '_' . str_replace(
+                ' ',
+                '_',
+                $file->getClientOriginalName()
+            );
+
+            $path = $file->storeAs(
+                'profile',
+                $fileName,
+                's3'
+            );
+
+            $profile->cv_file_path = Storage::disk('s3')->url($path);
         }
 
         if ($request->hasFile('avatar')) {
+            // Hapus file lama
             if ($profile->avatar_path) {
-                $oldPath = str_replace('/storage/', '', $profile->avatar_path);
-                Storage::disk('public')->delete($oldPath);
+                $oldPath = parse_url($profile->avatar_path, PHP_URL_PATH);
+
+                if ($oldPath) {
+                    $oldPath = preg_replace(
+                        '#^/storage/v1/s3/public/portfolio/#',
+                        '',
+                        $oldPath
+                    );
+
+                    Storage::disk('s3')->delete($oldPath);
+                }
             }
-            $path = $request->file('avatar')->store('profile', 'public');
-            $profile->avatar_path = '/storage/' . $path;
+
+            $path = $request->file('avatar')->store(
+                'profile',
+                's3'
+            );
+
+            $profile->avatar_path = Storage::disk('s3')->url($path);
         }
 
         $profile->save();
