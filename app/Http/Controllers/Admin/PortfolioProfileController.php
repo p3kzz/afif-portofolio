@@ -76,16 +76,26 @@ class PortfolioProfileController extends Controller
 
         if ($request->hasFile('avatar')) {
 
-            $path = $request->file('avatar')->store(
-                'profile',
-                's3'
-            );
-            // dd($path);
+            try {
 
-            dd(
-                $request->hasFile('avatar'),
-                $request->file('avatar')
-            );
+                $file = $request->file('avatar');
+
+                $path = $file->store(
+                    'profile',
+                    's3'
+                );
+
+                dd([
+                    'path' => $path,
+                ]);
+            } catch (\Throwable $e) {
+
+                dd([
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                ]);
+            }
             $profile->avatar_path = Storage::disk('s3')->url($path);
         }
         $profile->save();
