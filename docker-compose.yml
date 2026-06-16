@@ -1,0 +1,43 @@
+services:
+    app:
+        restart: unless-stopped
+        build:
+            context: .
+            dockerfile: Dockerfile
+        ports:
+            - "8000:80"
+        environment:
+            - APP_KEY=base64:HFcwTdxZF+rxldAu2UUX/EzXsbytfkTpc3OOjDDqjVg=
+            - APP_DEBUG=true
+            - DB_CONNECTION=mysql
+            - DB_HOST=db
+            - DB_PORT=3306
+            - DB_DATABASE=afif-porto
+            - DB_USERNAME=root
+            - DB_PASSWORD=secret
+        depends_on:
+            - db
+        volumes:
+            - storage-data:/var/www/html/storage
+
+    db:
+        restart: unless-stopped
+        image: mysql:8.0
+        ports:
+            - "3306:3306"
+        env_file:
+            - .env.docker
+        environment:
+            - MYSQL_DATABASE=afif-porto
+            - MYSQL_ROOT_PASSWORD=secret
+        volumes:
+            - db-data:/var/lib/mysql
+        healthcheck:
+            test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-psecret" ]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+
+volumes:
+    storage-data:
+    db-data:
