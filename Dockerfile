@@ -32,6 +32,9 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www/html
 
+RUN mkdir -p database \
+    && touch database/database.sqlite
+
 # Copy application files (excluding those in .dockerignore)
 COPY . .
 
