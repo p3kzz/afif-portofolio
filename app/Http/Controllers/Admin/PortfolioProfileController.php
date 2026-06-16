@@ -91,7 +91,10 @@ class PortfolioProfileController extends Controller
 
             $profile->avatar_path = Storage::disk('s3')->url($path);
         }
-
+        dd(
+            $request->hasFile('avatar'),
+            $request->file('avatar')
+        );
         $profile->save();
 
         return redirect()->back()->with('success', 'Portfolio Profile updated successfully.');

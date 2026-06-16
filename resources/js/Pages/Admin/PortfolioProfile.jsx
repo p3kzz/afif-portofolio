@@ -44,9 +44,14 @@ export default function PortfolioProfile({ profile, statistics, aboutCards }) {
 
     const handleProfileSubmit = (e) => {
         e.preventDefault();
-        // Since we are uploading files, we must use POST.
-        // We submit to route('admin.profile.update')
-        postProfile(route('admin.profile.update'));
+
+        postProfile(
+            route('admin.profile.update'),
+            {
+                forceFormData: true,
+                preserveScroll: true,
+            }
+        );
     };
 
     // 2. Statistics Form
@@ -144,25 +149,22 @@ export default function PortfolioProfile({ profile, statistics, aboutCards }) {
                 <div className="flex gap-2 p-1.5 bg-white/[0.03] border border-white/[0.06] rounded-2xl w-fit">
                     <button
                         onClick={() => setActiveSubTab('general')}
-                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                            activeSubTab === 'general' ? 'bg-[#007AFF] text-white shadow' : 'text-[#86868B] hover:text-white'
-                        }`}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeSubTab === 'general' ? 'bg-[#007AFF] text-white shadow' : 'text-[#86868B] hover:text-white'
+                            }`}
                     >
                         General Info
                     </button>
                     <button
                         onClick={() => setActiveSubTab('stats')}
-                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                            activeSubTab === 'stats' ? 'bg-[#007AFF] text-white shadow' : 'text-[#86868B] hover:text-white'
-                        }`}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeSubTab === 'stats' ? 'bg-[#007AFF] text-white shadow' : 'text-[#86868B] hover:text-white'
+                            }`}
                     >
                         Statistic Counters
                     </button>
                     <button
                         onClick={() => setActiveSubTab('about')}
-                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
-                            activeSubTab === 'about' ? 'bg-[#007AFF] text-white shadow' : 'text-[#86868B] hover:text-white'
-                        }`}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all ${activeSubTab === 'about' ? 'bg-[#007AFF] text-white shadow' : 'text-[#86868B] hover:text-white'
+                            }`}
                     >
                         About Cards
                     </button>

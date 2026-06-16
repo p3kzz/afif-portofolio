@@ -19,24 +19,24 @@ Route::post('/comments', [PortfolioController::class, 'storeComment'])->name('po
 //         'phpVersion' => PHP_VERSION,
 //     ]);
 // });
-Route::get('/s3-test', function () {
+// Route::get('/s3-test', function () {
 
-    try {
+//     try {
 
-        Storage::disk('s3')->put(
-            'test.txt',
-            'hello world'
-        );
+//         Storage::disk('s3')->put(
+//             'test.txt',
+//             'hello world'
+//         );
 
-        return 'UPLOAD SUCCESS';
+//         return 'UPLOAD SUCCESS';
 
-    } catch (\Throwable $e) {
+//     } catch (\Throwable $e) {
 
-        return $e->getMessage();
+//         return $e->getMessage();
 
-    }
+//     }
 
-});
+// });
 Route::get('/dashboard', function () {
     return redirect()->route('admin.dashboard');
 })->name('dashboard');
