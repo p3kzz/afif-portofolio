@@ -56,22 +56,9 @@ class PortfolioProfileController extends Controller
         $profile->instagram_url = $validated['instagram_url'] ?? null;
 
         if ($request->hasFile('cv_file')) {
-            // Hapus file lama
-            if ($profile->cv_file_path) {
-                $oldPath = parse_url($profile->cv_file_path, PHP_URL_PATH);
-
-                if ($oldPath) {
-                    $oldPath = preg_replace(
-                        '#^/storage/v1/s3/public/portfolio/#',
-                        '',
-                        $oldPath
-                    );
-
-                    Storage::disk('s3')->delete($oldPath);
-                }
-            }
 
             $file = $request->file('cv_file');
+
             $fileName = time() . '_' . str_replace(
                 ' ',
                 '_',
@@ -88,20 +75,6 @@ class PortfolioProfileController extends Controller
         }
 
         if ($request->hasFile('avatar')) {
-            // Hapus file lama
-            if ($profile->avatar_path) {
-                $oldPath = parse_url($profile->avatar_path, PHP_URL_PATH);
-
-                if ($oldPath) {
-                    $oldPath = preg_replace(
-                        '#^/storage/v1/s3/public/portfolio/#',
-                        '',
-                        $oldPath
-                    );
-
-                    Storage::disk('s3')->delete($oldPath);
-                }
-            }
 
             $path = $request->file('avatar')->store(
                 'profile',
